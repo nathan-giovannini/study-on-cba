@@ -5,7 +5,7 @@
 
 rule solve_network:
     input:
-        network=resources("networks/composed_{horizon}.nc"),
+        network=resources("networks/composed_{horizon}_OH.nc"),
     output:
         network=RESULTS + "networks/solved_{horizon}.nc",
         model=(
