@@ -1,0 +1,2 @@
+hub,x,y,bus1,link1_p_nom,link1_capital_cost,bus2,link2_p_nom,link2_capital_cost,gen,carrier,p_nom,p_nom_max
+test,3.2,53.8,BE00,2000,0,NL00,2000,,gen0,offwind-dc,1500,

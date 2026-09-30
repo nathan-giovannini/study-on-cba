@@ -246,3 +246,19 @@ rule compose_network:
         "Composing network for horizon {wildcards.horizon}"
     script:
         scripts("compose_network.py")
+
+rule add_offshore_hubs:
+    input:
+        network=resources("networks/composed_{horizon}.nc"),
+        hubs="data/offshore_hubs.csv",
+        cutout=lambda w: input_cutout(
+            w, config_provider("renewable", "offwind-dc", "cutout")(w)
+        ),
+    params:
+        renewable=config_provider("renewable"),
+        snapshots=config_provider("snapshots"),
+        drop_leap_day=config_provider("enable", "drop_leap_day"),
+    output:
+        network=resources("networks/composed_{horizon}_OH.nc"),
+    script:
+        "../scripts/add_offshore_hubs.py"
