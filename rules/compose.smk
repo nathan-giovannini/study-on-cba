@@ -250,7 +250,9 @@ rule compose_network:
 rule add_offshore_hubs:
     input:
         network=resources("networks/composed_{horizon}.nc"),
-        hubs="data/offshore_hubs.csv",
+        buses="data/offshore/buses.csv",
+        links="data/offshore/links.csv",
+        generators="data/offshore/generators.csv",
         cutout=lambda w: input_cutout(
             w, config_provider("renewable", "offwind-dc", "cutout")(w)
         ),
