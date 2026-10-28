@@ -3,16 +3,46 @@
 # SPDX-License-Identifier: MIT
 
 
-rule build_electricity_demand:
+rule clean_tyndp_electricity_demand:
+    params:
+        planning_horizons=config_provider("planning_horizons"),
+        snapshots=config_provider("snapshots"),
+        scenario=config_provider("load", "tyndp_scenario"),
+        available_years=config_provider("load", "available_years_tyndp"),
     input:
-        opsd=rules.retrieve_electricity_demand_opsd.output["csv"],
-        neso=rules.retrieve_electricity_demand_neso.output["csv"],
-        entsoe=rules.retrieve_electricity_demand_entsoe.output["csv"],
-        synthetic=lambda w: (
+        electricity_demand=rules.retrieve_tyndp.output.demand_profiles,
+    output:
+        electricity_demand_prepped=resources("electricity_demand_raw_tyndp.csv"),
+    log:
+        logs("clean_tyndp_electricity_demand.log"),
+    benchmark:
+        benchmarks("clean_tyndp_electricity_demand")
+    resources:
+        mem_mb=4000,
+    message:
+        "Cleaning TYNDP electricity demand"
+    script:
+        scripts("clean_tyndp_electricity_demand.py")
+
+
+def input_electricity_demand(w):
+    if config_provider("load", "source")(w) == "tyndp":
+        return {"tyndp": resources("electricity_demand_raw_tyndp.csv")}
+    return {
+        "opsd": rules.retrieve_electricity_demand_opsd.output["csv"],
+        "neso": rules.retrieve_electricity_demand_neso.output["csv"],
+        "entsoe": rules.retrieve_electricity_demand_entsoe.output["csv"],
+        "synthetic": (
             ancient(rules.retrieve_synthetic_electricity_demand.output["csv"])
             if config_provider("load", "supplement_synthetic")(w)
             else []
         ),
+    }
+
+
+rule build_electricity_demand:
+    input:
+        unpack(input_electricity_demand),
     output:
         resources("electricity_demand.csv"),
     log:
@@ -623,14 +653,22 @@ def input_class_regions(w):
     }
 
 
+def input_electricity_demand_base(w):
+    if config_provider("load", "source")(w) == "tyndp":
+        return {}
+    return {
+        "regions": resources("onshore_regions_simplified.geojson"),
+        "raster": rules.retrieve_electricity_demand_energy_atlas.output["tif"],
+        "gb_excel": rules.retrieve_desnz_electricity_consumption.output["xlsx"],
+        "gb_geojson": rules.retrieve_ons_lad.output["geojson"],
+        "nuts3": resources("nuts3_shapes.geojson"),
+    }
+
+
 rule build_electricity_demand_base:
     input:
+        unpack(input_electricity_demand_base),
         base_network=resources("networks/simplified.nc"),
-        regions=resources("onshore_regions_simplified.geojson"),
-        raster=rules.retrieve_electricity_demand_energy_atlas.output["tif"],
-        gb_excel=rules.retrieve_desnz_electricity_consumption.output["xlsx"],
-        gb_geojson=rules.retrieve_ons_lad.output["geojson"],
-        nuts3=resources("nuts3_shapes.geojson"),
         load=resources("electricity_demand.csv"),
     output:
         resources("electricity_demand_simplified.nc"),
@@ -643,6 +681,7 @@ rule build_electricity_demand_base:
     params:
         distribution_key=config_provider("load", "distribution_key"),
         substation_only=config_provider("load", "substation_only"),
+        load_source=config_provider("load", "source"),
     message:
         "Building electricity demand time series for base network"
     script:
