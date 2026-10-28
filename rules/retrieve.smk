@@ -1215,15 +1215,18 @@ if (TYNDP_DATASET := dataset_version("tyndp"))["source"] in ["primary", "archive
         input:
             line_data=storage(TYNDP_DATASET["url"] + "/Line-data.zip"),
             nodes=storage(TYNDP_DATASET["url"] + "/Nodes.zip"),
+            demand_profiles=storage(TYNDP_DATASET["url"] + "/Demand-Profiles.zip"),
         output:
             line_data_zip=f"{TYNDP_DATASET['folder']}/Line-data.zip",
             nodes_zip=f"{TYNDP_DATASET['folder']}/Nodes.zip",
             reference_grid=f"{TYNDP_DATASET['folder']}/Line data/ReferenceGrid_Electricity.xlsx",
             nodes=f"{TYNDP_DATASET['folder']}/Nodes/LIST OF NODES.xlsx",
+            demand_profiles_zip=f"{TYNDP_DATASET['folder']}/Demand-Profiles.zip",
+            demand_profiles=directory(f"{TYNDP_DATASET['folder']}/Demand Profiles"),
         log:
             "logs/retrieve_tyndp.log",
         message:
-            "Retrieving TYNDP network topology data"
+            "Retrieving TYNDP network topology and demand data"
         run:
             for key in input.keys():
                 # Keep zip file

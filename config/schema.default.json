@@ -2915,6 +2915,32 @@
     "LoadConfig": {
       "description": "Configuration for `load` settings.",
       "properties": {
+        "source": {
+          "default": "opsd",
+          "description": "Data source used for the electrical load (OPSD or TYNDP, default: OPSD).",
+          "enum": [
+            "opsd",
+            "tyndp"
+          ],
+          "type": "string"
+        },
+        "tyndp_scenario": {
+          "default": "NT",
+          "description": "TYNDP 2024 scenario used for the electrical load if `source` is `tyndp`.",
+          "enum": [
+            "NT",
+            "DE",
+            "GA"
+          ],
+          "type": "string"
+        },
+        "available_years_tyndp": {
+          "description": "List of years for which TYNDP demand data is available.",
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
         "fill_gaps": {
           "description": "Configuration for `load.fill_gaps` settings.",
           "properties": {
@@ -10591,6 +10617,32 @@
     "load": {
       "description": "Configuration for `load` settings.",
       "properties": {
+        "source": {
+          "default": "opsd",
+          "description": "Data source used for the electrical load (OPSD or TYNDP, default: OPSD).",
+          "enum": [
+            "opsd",
+            "tyndp"
+          ],
+          "type": "string"
+        },
+        "tyndp_scenario": {
+          "default": "NT",
+          "description": "TYNDP 2024 scenario used for the electrical load if `source` is `tyndp`.",
+          "enum": [
+            "NT",
+            "DE",
+            "GA"
+          ],
+          "type": "string"
+        },
+        "available_years_tyndp": {
+          "description": "List of years for which TYNDP demand data is available.",
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
         "fill_gaps": {
           "description": "Configuration for `load.fill_gaps` settings.",
           "properties": {

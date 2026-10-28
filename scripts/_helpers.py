@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import time
+from bisect import bisect_right
 from collections.abc import Callable
 from functools import lru_cache, partial, wraps
 from itertools import takewhile
@@ -798,6 +799,48 @@ def parse(infix):
         return yaml.safe_load(infix[0])
     else:
         return {infix.pop(0): parse(infix)}
+
+
+def safe_pyear(
+    year: int | str,
+    available_years: list[int] = [2030, 2040, 2050],
+    source: str = "TYNDP",
+    verbose: bool = True,
+) -> int:
+    """
+    Check whether a planning year is in the available years of a data source.
+    If not, fall back to the previous available year.
+
+    Parameters
+    ----------
+    year : int | str
+        Planning horizon year.
+    available_years : list[int], optional
+        List of available years. Defaults to [2030, 2040, 2050].
+    source : str, optional
+        Data source name, for logging only. Defaults to "TYNDP".
+    verbose : bool, optional
+        Whether to log a warning on fallback. Defaults to True.
+
+    Returns
+    -------
+    int
+        Planning year adjusted to the available years.
+    """
+    if not available_years:
+        raise ValueError(
+            "No `available_years` provided. Expected a non-empty list of years."
+        )
+    year = int(year)
+    if year in available_years:
+        return year
+    ordered = sorted(available_years)
+    year_new = ordered[max(bisect_right(ordered, year) - 1, 0)]
+    if verbose:
+        logger.warning(
+            f"{source} data unavailable for planning horizon {year}. Falling back to previous available year {year_new}."
+        )
+    return year_new
 
 
 def get_snapshots(
