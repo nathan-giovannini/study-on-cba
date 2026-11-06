@@ -16,6 +16,7 @@ gurobi.log
 *.orig
 .idea
 
+/benchmark-tyndp/*
 /bak
 /resources
 /resources*
