@@ -3,26 +3,28 @@
 # SPDX-License-Identifier: MIT
 
 
-rule clean_tyndp_electricity_demand:
-    params:
-        planning_horizons=config_provider("planning_horizons"),
-        snapshots=config_provider("snapshots"),
-        scenario=config_provider("load", "tyndp_scenario"),
-        available_years=config_provider("load", "available_years_tyndp"),
-    input:
-        electricity_demand=rules.retrieve_tyndp.output.demand_profiles,
-    output:
-        electricity_demand_prepped=resources("electricity_demand_raw_tyndp.csv"),
-    log:
-        logs("clean_tyndp_electricity_demand.log"),
-    benchmark:
-        benchmarks("clean_tyndp_electricity_demand")
-    resources:
-        mem_mb=4000,
-    message:
-        "Cleaning TYNDP electricity demand"
-    script:
-        scripts("clean_tyndp_electricity_demand.py")
+if config["load"]["source"] == "tyndp":
+
+    rule clean_tyndp_electricity_demand:
+        params:
+            planning_horizons=config_provider("planning_horizons"),
+            snapshots=config_provider("snapshots"),
+            scenario=config_provider("load", "tyndp_scenario"),
+            available_years=config_provider("load", "available_years_tyndp"),
+        input:
+            electricity_demand=rules.retrieve_tyndp_demand_profiles.output.demand_profiles,
+        output:
+            electricity_demand_prepped=resources("electricity_demand_raw_tyndp.csv"),
+        log:
+            logs("clean_tyndp_electricity_demand.log"),
+        benchmark:
+            benchmarks("clean_tyndp_electricity_demand")
+        resources:
+            mem_mb=4000,
+        message:
+            "Cleaning TYNDP electricity demand"
+        script:
+            scripts("clean_tyndp_electricity_demand.py")
 
 
 def input_electricity_demand(w):

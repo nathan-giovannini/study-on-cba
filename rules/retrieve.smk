@@ -1215,18 +1215,15 @@ if (TYNDP_DATASET := dataset_version("tyndp"))["source"] in ["primary", "archive
         input:
             line_data=storage(TYNDP_DATASET["url"] + "/Line-data.zip"),
             nodes=storage(TYNDP_DATASET["url"] + "/Nodes.zip"),
-            demand_profiles=storage(TYNDP_DATASET["url"] + "/Demand-Profiles.zip"),
         output:
             line_data_zip=f"{TYNDP_DATASET['folder']}/Line-data.zip",
             nodes_zip=f"{TYNDP_DATASET['folder']}/Nodes.zip",
             reference_grid=f"{TYNDP_DATASET['folder']}/Line data/ReferenceGrid_Electricity.xlsx",
             nodes=f"{TYNDP_DATASET['folder']}/Nodes/LIST OF NODES.xlsx",
-            demand_profiles_zip=f"{TYNDP_DATASET['folder']}/Demand-Profiles.zip",
-            demand_profiles=directory(f"{TYNDP_DATASET['folder']}/Demand Profiles"),
         log:
             "logs/retrieve_tyndp.log",
         message:
-            "Retrieving TYNDP network topology and demand data"
+            "Retrieving TYNDP network topology data"
         run:
             for key in input.keys():
                 # Keep zip file
@@ -1235,6 +1232,24 @@ if (TYNDP_DATASET := dataset_version("tyndp"))["source"] in ["primary", "archive
                 output_folder = Path(output[f"{key}_zip"]).parent
                 unpack_archive(output[f"{key}_zip"], output_folder)
                 # Remove __MACOSX directory if it exists
+                macosx_dir = output_folder / "__MACOSX"
+                rmtree(macosx_dir, ignore_errors=True)
+
+    if config["load"]["source"] == "tyndp":
+
+        rule retrieve_tyndp_demand_profiles:
+            # Demand-Profiles.zip must be placed manually in the TYNDP folder
+            input:
+                demand_profiles_zip=f"{TYNDP_DATASET['folder']}/Demand-Profiles.zip",
+            output:
+                demand_profiles=directory(f"{TYNDP_DATASET['folder']}/Demand Profiles"),
+            log:
+                "logs/retrieve_tyndp_demand_profiles.log",
+            message:
+                "Unpacking TYNDP demand profiles"
+            run:
+                output_folder = Path(input.demand_profiles_zip).parent
+                unpack_archive(input.demand_profiles_zip, output_folder)
                 macosx_dir = output_folder / "__MACOSX"
                 rmtree(macosx_dir, ignore_errors=True)
 
