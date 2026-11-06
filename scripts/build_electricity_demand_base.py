@@ -225,6 +225,26 @@ def upsample_load(
     return xr.concat(data_arrays, dim="bus")
 
 
+def tyndp_load(n: pypsa.Network, load_fn: str) -> xr.DataArray:
+    """
+    Assign TYNDP node-level demand directly to the buses of the network.
+
+    The TYNDP demand columns are named after TYNDP nodes, which are the bus names
+    of the TYNDP base network. No spatial disaggregation is needed.
+    """
+    load = pd.read_csv(load_fn, index_col=0, parse_dates=True)
+
+    missing = load.columns.difference(n.buses.index)
+    if len(missing):
+        logger.warning(
+            f"TYNDP demand for nodes without a matching bus is dropped: {', '.join(missing)}"
+        )
+    load = load.reindex(columns=n.buses.index).dropna(axis=1, how="all")
+    load.index.name = "time"
+    load.columns.name = "bus"
+    return xr.DataArray(load, dims=["time", "bus"])
+
+
 if __name__ == "__main__":
     if "snakemake" not in globals():
         from scripts._helpers import mock_snakemake
@@ -237,17 +257,20 @@ if __name__ == "__main__":
 
     n = pypsa.Network(snakemake.input.base_network)
 
-    load = upsample_load(
-        n,
-        regions_fn=snakemake.input.regions,
-        load_fn=snakemake.input.load,
-        raster_fn=snakemake.input.raster,
-        gb_excel_fn=snakemake.input.gb_excel,
-        gb_geojson_fn=snakemake.input.gb_geojson,
-        nuts3_fn=snakemake.input.nuts3,
-        distribution_key=params.distribution_key,
-        substation_only=params.substation_only,
-    )
+    if params.load_source == "tyndp":
+        load = tyndp_load(n, snakemake.input.load)
+    else:
+        load = upsample_load(
+            n,
+            regions_fn=snakemake.input.regions,
+            load_fn=snakemake.input.load,
+            raster_fn=snakemake.input.raster,
+            gb_excel_fn=snakemake.input.gb_excel,
+            gb_geojson_fn=snakemake.input.gb_geojson,
+            nuts3_fn=snakemake.input.nuts3,
+            distribution_key=params.distribution_key,
+            substation_only=params.substation_only,
+        )
 
     load.name = "electricity demand (MW)"
     comp = dict(zlib=True, complevel=9, least_significant_digit=5)

@@ -18,6 +18,9 @@ snapshots:
   start: "2013-03-01"
   end: "2013-03-08"
 
+load:
+  source: tyndp
+
 electricity:
   base_network: tyndp
   transmission_limit: v1.0

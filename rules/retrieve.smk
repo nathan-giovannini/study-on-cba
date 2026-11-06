@@ -1235,6 +1235,24 @@ if (TYNDP_DATASET := dataset_version("tyndp"))["source"] in ["primary", "archive
                 macosx_dir = output_folder / "__MACOSX"
                 rmtree(macosx_dir, ignore_errors=True)
 
+    if config["load"]["source"] == "tyndp":
+
+        rule retrieve_tyndp_demand_profiles:
+            # Demand-Profiles.zip must be placed manually in the TYNDP folder
+            input:
+                demand_profiles_zip=f"{TYNDP_DATASET['folder']}/Demand-Profiles.zip",
+            output:
+                demand_profiles=directory(f"{TYNDP_DATASET['folder']}/Demand Profiles"),
+            log:
+                "logs/retrieve_tyndp_demand_profiles.log",
+            message:
+                "Unpacking TYNDP demand profiles"
+            run:
+                output_folder = Path(input.demand_profiles_zip).parent
+                unpack_archive(input.demand_profiles_zip, output_folder)
+                macosx_dir = output_folder / "__MACOSX"
+                rmtree(macosx_dir, ignore_errors=True)
+
 
 def get_osm_archive_files(version):
     return [
