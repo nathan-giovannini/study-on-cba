@@ -11,6 +11,7 @@ pull request's base branch, `pypsa-eur-v08-2026`.
 - Extends TYNDP retrieval to unpack `Demand-Profiles.zip` and adds a cleaning
   rule that reads the selected scenario and planning year. Only the first
   configured planning horizon is used.
+  Pay attention: the file `Demand-Profiles.zip` was copied manually to data because it was not possible to retrieve it. 
 - Adds the TYNDP demand profile to the electricity-demand build. It is
   reindexed to the snapshots' year without gap filling and assigned directly
   to matching TYNDP buses; unmatched nodes are dropped with a warning.
@@ -22,6 +23,7 @@ pull request's base branch, `pypsa-eur-v08-2026`.
 
 - Adds a collection rule for composed networks with offshore hubs and a sample
   `data/offshore_hubs.csv`.
+  - also the rule `rules/collect.smk` includes a new compose_OH made specifically for it
 - Adds two custom configurations under `config/nathan_config/` for TYNDP-network
   and demand runs.
 - Ignores files under `/benchmark-tyndp/`.
