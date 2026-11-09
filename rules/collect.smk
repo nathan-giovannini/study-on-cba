@@ -41,6 +41,15 @@ rule compose_networks:
     message:
         "Collecting composed network files"
 
+rule compose_networks_OH:
+    input:
+        expand(
+            resources("networks/composed_{horizon}_OH.nc"),
+            run=config["run"]["name"],
+            horizon=config["planning_horizons"],
+        ),
+    message:
+        "Collecting composed network files with offshore hubs"
 
 rule solve_networks:
     input:
