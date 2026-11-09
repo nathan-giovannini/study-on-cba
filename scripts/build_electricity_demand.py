@@ -6,9 +6,13 @@ This rule downloads the load data from [Open Power System Data Time series](http
 the network, the per country load timeseries are extracted from the dataset.
 After filling small gaps linearly and large gaps by copying time-slice of a
 given period, the load data is exported to a `.csv` file.
+
+If `load: source: tyndp` is set, the prepared TYNDP demand (per TYNDP node)
+is instead reindexed to the snapshots and exported without any gap filling.
 """
 
 import logging
+import sys
 
 import numpy as np
 import pandas as pd
@@ -232,6 +236,22 @@ if __name__ == "__main__":
     snapshots = get_snapshots(
         snakemake.params.snapshots, snakemake.params.drop_leap_day
     )
+
+    if snakemake.params.load["source"] == "tyndp":
+        # TYNDP demand is indexed by the planning year; move it to the snapshots' year
+        load = pd.read_csv(snakemake.input.tyndp, index_col=0, parse_dates=True)
+        cyear = snapshots[0].year
+        if cyear != snapshots[-1].year:
+            logger.warning(
+                "Snapshots covers more than one year, consider limiting your analysis to a single full year."
+            )
+        load.index = load.index.map(lambda t: t.replace(year=cyear))
+        load = load.reindex(index=snapshots)
+        assert not load.isna().any().any(), (
+            "TYNDP load data does not cover all snapshots."
+        )
+        load.to_csv(snakemake.output[0])
+        sys.exit(0)
 
     # supported year ranges
     years = slice("2010", "2025")

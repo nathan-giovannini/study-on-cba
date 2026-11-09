@@ -8,6 +8,8 @@ Load configuration.
 See docs in https://pypsa-eur.readthedocs.io/en/latest/configuration/#load_cf
 """
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from scripts.lib.validation.config._base import ConfigModel
@@ -46,6 +48,18 @@ class _DistributionKeyConfig(BaseModel):
 class LoadConfig(BaseModel):
     """Configuration for `load` settings."""
 
+    source: Literal["opsd", "tyndp"] = Field(
+        "opsd",
+        description="Data source used for the electrical load (OPSD or TYNDP, default: OPSD).",
+    )
+    tyndp_scenario: Literal["NT", "DE", "GA"] = Field(
+        "NT",
+        description="TYNDP 2024 scenario used for the electrical load if `source` is `tyndp`.",
+    )
+    available_years_tyndp: list[int] = Field(
+        default_factory=lambda: [2030, 2040, 2050],
+        description="List of years for which TYNDP demand data is available.",
+    )
     fill_gaps: _FillGapsConfig = Field(
         default_factory=_FillGapsConfig,
         description="Gaps filling strategy used.",
