@@ -1,0 +1,222 @@
+# yaml-language-server: $schema=../schema.default.json
+# SPDX-FileCopyrightText: Contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+run:
+  name: "analysis_v0"
+  disable_progressbar: true
+  shared_resources:
+    policy: false
+  scenarios:
+    enable: false
+    file: config/scenarios.yaml
+
+planning_horizons: 2040
+
+sector:
+  enabled: false
+
+countries:
+- AT
+- BE
+- BG
+- CZ
+- DE
+- DK
+- EE
+- ES
+- FI
+- FR
+- GB
+- GR
+- HR
+- HU
+- IE
+- IT
+- LT
+- LU
+- LV
+- NL
+- 'NO'
+- PL
+- PT
+- RO
+- SE
+- SI
+- SK
+
+foresight: overnight
+
+snapshots:
+  start: "2009-01-01"
+  end: "2010-01-01"
+  inclusive: left
+
+
+electricity:
+  base_network: tyndp
+  max_hours:
+    battery: 4
+  extendable_carriers:
+    Generator:
+    - solar
+#    - "solar-hsat"
+    - onwind
+    - "offwind-ac"
+    - CCGT
+    StorageUnit:
+    - battery
+    Store: []
+    Link: []
+  powerplants_filter: "(DateOut > 2041 or DateOut != DateOut) and (DateIn < 2040 or DateIn != DateIn)"
+  custom_powerplants: true
+  everywhere_powerplants: []
+  conventional_carriers:
+  - nuclear
+  - OCGT
+  - CCGT
+  - coal
+  - lignite
+  - geothermal
+  - biomass
+  renewable_carriers:
+  - solar
+ # - "solar-hsat"
+  - onwind
+  - "offwind-ac"
+  - "offwind-dc"
+  - hydro
+  estimate_renewable_capacities:
+    enable: false
+    from_powerplantmatching: true
+    from_irenastat: true
+    year: 2024
+    expansion_limit: false
+  estimate_battery_capacities: false
+  technology_mapping:
+    Offshore: "offwind-ac"
+    Onshore: onwind
+    PV: solar
+  transmission_limit: v1.0
+
+atlite:
+  default_cutout: "europe-2009-sarah3-era5"
+  cutouts:
+    "europe-1940-2024-era5":
+      module: era5
+      x:
+      - -12.0
+      - 42.0
+      'y':
+      - 33.0
+      - 72.0
+      dx: 0.3
+      dy: 0.3
+      time:
+      - '2009'
+      - '2009'
+
+renewable:
+  onwind:
+    capacity_per_sqkm: 30
+  solar:
+    capacity_per_sqkm: 50
+  offwind-ac:
+    capacity_per_sqkm: 50
+
+
+
+co2_budget:
+  relative: false
+  upper: null
+
+links:
+  p_nom_max_extension: 5000
+  under_construction: keep
+
+transmission_projects:
+  enable: true
+  include:
+    tyndp2020: false
+    nep: false
+    manual: true
+  skip:
+  - upgraded_lines
+  - upgraded_links
+  status:
+  - under_construction
+  - in_permitting
+  - confirmed
+  new_link_capacity: keep
+
+load:
+  source: tyndp
+  fill_gaps:
+    enable: true
+    interpolate_limit: 6
+    time_shift_for_large_gaps: 1w
+  manual_adjustments: true
+  scaling_factor: 1.0 #1.52
+
+costs:
+  emission_prices:
+    enable: true
+    co2: 180.0
+
+
+
+clustering:
+  mode: administrative
+  administrative:
+    level: bz
+#    FR: 0
+#    BE: 0
+#    DE: 0
+#    countries: {'NO': 0}
+  focus_weights: false
+  copperplate_regions: []
+  build_bidding_zones:
+    remove_islands: true
+    aggregate_to_tyndp: true
+  cluster_network:
+    n_clusters: 50
+    algorithm: kmeans
+    allow_ac_dc_mixing_in_bus_clusters: true
+    hac_features:
+    - wnd100m
+    - influx_direct
+  exclude_carriers: []
+  consider_efficiency_classes: false
+  aggregation_strategies:
+    generators:
+      committable: any
+      ramp_limit_up: max
+      ramp_limit_down: max
+    buses: {}
+  temporal:
+    averaging: false
+    segmentation: false
+    representative: false
+
+
+solving:
+  options:
+    load_shedding:
+      enable: true
+      default_cost: 1000
+      all_carriers: false
+      carriers: {"AC": 3000}
+  agg_p_nom_limits:
+    agg_offwind: false
+    agg_solar: true
+    include_existing: true
+    file: data/agg_p_nom_minmax.csv
+  constraints:
+    CCL: true
+    EQ: false
+    BAU: false
+    SAFE: false
+  solver:
+    name: gurobi
+    options: "gurobi-default"

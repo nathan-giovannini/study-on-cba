@@ -203,7 +203,8 @@ solving:
     load_shedding:
       enable: true
       default_cost: 1000
-      all_carriers: true
+      all_carriers: false
+      carriers: {"AC": 1000}
   agg_p_nom_limits:
     agg_offwind: false
     agg_solar: true
